@@ -1,11 +1,20 @@
-GET http://localhost:3000/events/6290c0f2-a7f5-46b9-b326-c8a4cbf74c6c/spots
+GET http://localhost:3000/events/e6de1fac-b514-4f7c-8fc7-8de1ce3f423f/spots
 
 ###
-# @name createdEvent
-POST http://localhost:3000/events/6290c0f2-a7f5-46b9-b326-c8a4cbf74c6c/spots
+POST http://localhost:3000/events/e6de1fac-b514-4f7c-8fc7-8de1ce3f423f/spots
 Content-Type: application/json
 
 {
   "name": "A1",
   "status": "available"
+}
+
+### reserve
+POST http://localhost:3000/events/e6de1fac-b514-4f7c-8fc7-8de1ce3f423f/reserve
+Content-Type: application/json
+
+{
+  "spotsIds": ["d0e95232-d610-4bcf-96ac-aa304c563ff6"],
+  "ticketKind": "half",
+  "email": "admin@admin.com"
 }

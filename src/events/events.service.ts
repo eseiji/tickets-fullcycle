@@ -60,42 +60,48 @@ export class EventsService {
     }
 
     try {
-      this.prismaService.$transaction(async (prisma) => {
-        await prisma.reservationHistory.createMany({
-          data: reservation.spotsIds.map((spotId) => ({
-            spotId,
-            email: reservation.email,
-            status: TicketStatus.reserved,
-            ticketKind: reservation.ticketKind,
-          })),
-        });
+      await this.prismaService.$transaction(
+        async (prisma) => {
+          await prisma.reservationHistory.createMany({
+            data: reservation.spotsIds.map((spotId) => ({
+              spotId,
+              email: reservation.email,
+              status: TicketStatus.reserved,
+              ticketKind: reservation.ticketKind,
+            })),
+          });
 
-        await prisma.spot.updateMany({
-          data: {
-            status: TicketStatus.reserved,
-          },
-          where: {
-            id: {
-              in: reservation.spotsIds,
+          await prisma.spot.updateMany({
+            data: {
+              status: TicketStatus.reserved,
             },
-          },
-        });
-
-        const createdTickets = await Promise.all(
-          reservation.spotsIds.map((spotId) => {
-            prisma.ticket.create({
-              data: {
-                spotId,
-                email: reservation.email,
-                ticketKind: reservation.ticketKind,
+            where: {
+              id: {
+                in: reservation.spotsIds,
               },
-            });
-          }),
-        );
+            },
+          });
 
-        return createdTickets;
-      });
+          const createdTickets = await Promise.all(
+            reservation.spotsIds.map((spotId) => {
+              prisma.ticket.create({
+                data: {
+                  spotId,
+                  email: reservation.email,
+                  ticketKind: reservation.ticketKind,
+                },
+              });
+            }),
+          );
+
+          return createdTickets;
+        },
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+        },
+      );
     } catch (error) {
+      // exception filter - nest
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         switch (error.code) {
           case 'P2002':
