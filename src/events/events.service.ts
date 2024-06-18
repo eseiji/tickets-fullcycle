@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ReserveSpotDto } from './dto/reserve-spot.dto';
+import { Prisma, TicketStatus } from '@prisma/client';
 
 @Injectable()
 export class EventsService {
@@ -14,22 +16,104 @@ export class EventsService {
         date: new Date(),
       },
     });
-    // return 'This action adds a new event';
   }
 
   findAll() {
     return this.prismaService.event.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} event`;
+  findOne(id: string) {
+    return this.prismaService.event.findUnique({
+      where: { id },
+    });
   }
 
-  update(id: number, updateEventDto: UpdateEventDto) {
-    return `This action updates a #${id} event`;
+  update(id: string, updateEventDto: UpdateEventDto) {
+    return this.prismaService.event.update({
+      data: updateEventDto,
+      where: {
+        id,
+      },
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} event`;
+  remove(id: string) {
+    return this.prismaService.event.delete({
+      where: {
+        id,
+      },
+    });
+  }
+
+  async reserveSpot(eventId: string, reservation: ReserveSpotDto) {
+    const isSpotsValid = await this.prismaService.spot.findMany({
+      where: {
+        eventId,
+        id: {
+          in: reservation.spotsIds,
+        },
+      },
+    });
+
+    if (isSpotsValid.length !== reservation.spotsIds.length) {
+      throw new Error('Invalid spots');
+    }
+
+    try {
+      this.prismaService.$transaction(async (prisma) => {
+        await prisma.reservationHistory.createMany({
+          data: reservation.spotsIds.map((spotId) => ({
+            spotId,
+            email: reservation.email,
+            status: TicketStatus.reserved,
+            ticketKind: reservation.ticketKind,
+          })),
+        });
+
+        await prisma.spot.updateMany({
+          data: {
+            status: TicketStatus.reserved,
+          },
+          where: {
+            id: {
+              in: reservation.spotsIds,
+            },
+          },
+        });
+
+        const createdTickets = await Promise.all(
+          reservation.spotsIds.map((spotId) => {
+            prisma.ticket.create({
+              data: {
+                spotId,
+                email: reservation.email,
+                ticketKind: reservation.ticketKind,
+              },
+            });
+          }),
+        );
+
+        return createdTickets;
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        switch (error.code) {
+          case 'P2002':
+            throw new Error('Spot already reserved'); // unique constraint violation
+          case 'P2034':
+            throw new Error('Reservation error, try again'); // transaction conflict
+          default:
+            throw error;
+        }
+      }
+    }
+
+    // await this.prismaService.ticket.createMany({
+    //   data: reservation.spotsIds.map((spotId) => ({
+    //     spotId,
+    //     email: reservation.email,
+    //     ticketKind: reservation.ticketKind,
+    //   })),
+    // });
   }
 }

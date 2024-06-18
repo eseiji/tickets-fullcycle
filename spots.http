@@ -1,0 +1,11 @@
+GET http://localhost:3000/events/6290c0f2-a7f5-46b9-b326-c8a4cbf74c6c/spots
+
+###
+# @name createdEvent
+POST http://localhost:3000/events/6290c0f2-a7f5-46b9-b326-c8a4cbf74c6c/spots
+Content-Type: application/json
+
+{
+  "name": "A1",
+  "status": "available"
+}
