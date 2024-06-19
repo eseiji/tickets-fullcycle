@@ -1,0 +1,39 @@
+GET http://localhost:3001/eventsP2
+
+###
+# @name createdEvent
+POST http://localhost:3001/events
+Content-Type: application/json
+
+{
+  "name": "Evento-1",
+  "description": "Evento 1 | Lançamento",
+  "date": "2024-06-18T00:00:00.000Z",
+  "price": 23
+}
+
+###
+
+@eventId = {{createdEvent.response.body.id}}
+
+###
+PATCH http://localhost:3001/events/{{eventId}}
+Content-Type: application/json
+
+{
+  "name": "Evento-modificado",
+  "description": "Evento 1 | Lançamento",
+  "date": "2024-06-18T00:00:00.000Z",
+  "price": 20
+}
+
+### reserve
+POST http://localhost:3001/eventsP2/e6de1fac-b514-4f7c-8fc7-8de1ce3f423f/reserve
+Content-Type: application/json
+X-Api-Token: 123
+
+{
+  "spotsIds": ["d0e95232-d610-4bcf-96ac-aa304c563ff6"],
+  "ticketKind": "half",
+  "email": "admin@admin.com"
+}

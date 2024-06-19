@@ -1,10 +1,20 @@
 import { Module } from '@nestjs/common';
-import { Partner2Controller } from './partner2.controller';
-import { Partner2Service } from './partner2.service';
+import { Partner2EventsModule } from './events/partner2.events.module';
+import { Partner2SpotsModule } from './spots/spots.module';
+import { ConfigModule } from '@nestjs/config';
+import { PrismaCoreModule } from '@app/core';
+import { AuthModule } from '@app/core/auth/auth.module';
 
 @Module({
-  imports: [],
-  controllers: [Partner2Controller],
-  providers: [Partner2Service],
+  imports: [
+    ConfigModule.forRoot({
+      envFilePath: '.env.partner2',
+      isGlobal: true,
+    }),
+    AuthModule,
+    PrismaCoreModule,
+    Partner2EventsModule,
+    Partner2SpotsModule,
+  ],
 })
 export class Partner2Module {}
