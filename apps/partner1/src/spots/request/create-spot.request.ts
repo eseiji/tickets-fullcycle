@@ -1,6 +1,6 @@
 import { SpotStatus } from '@prisma/client';
 
-export class CreateSpotDto {
+export class CreateSpotRequest {
   name: string;
   status: SpotStatus;
 }

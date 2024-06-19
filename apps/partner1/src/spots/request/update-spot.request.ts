@@ -1,8 +1,8 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateSpotDto } from './create-spot.dto';
+import { CreateSpotRequest } from './create-spot.request';
 import { SpotStatus } from '@prisma/client';
 
-export class UpdateSpotDto extends PartialType(CreateSpotDto) {
+export class UpdateSpotRequest extends PartialType(CreateSpotRequest) {
   name: string;
   status: SpotStatus;
   eventId: string;
